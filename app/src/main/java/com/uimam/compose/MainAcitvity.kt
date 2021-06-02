@@ -24,6 +24,12 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.navArgument
+import androidx.navigation.compose.rememberNavController
 import com.example.compose.jetchat.R
 
 class MainAcitvity : AppCompatActivity() {
@@ -34,19 +40,33 @@ class MainAcitvity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         viewModel.init()
         setContent {
-            HelloScreen(viewModel)
+            val navController = rememberNavController()
+
+            NavHost(navController = navController, startDestination = "list") {
+                composable("list") { ListScreen(viewModel, navController) }
+                composable(
+                    "detail?rowId={rowId}",
+                    arguments = listOf(navArgument("rowId") { type = NavType.IntType })
+                ) {
+                    DetailScreen(navController, it.arguments?.getInt("rowId") ?: 0)
+                }
+            }
+
         }
     }
 
     @Composable
-    fun HelloScreen(viewModel: MainViewModel) {
+    fun ListScreen(viewModel: MainViewModel, navController: NavController) {
         val list: List<Row> by viewModel.list.collectAsState()
-        HelloContent(list = list, onRowClicked = { viewModel.deleteRow(it) })
+        HelloContent(list = list, onRowClicked = {
+//            viewModel.deleteRow(it)
+            navController.navigate("detail?rowId=${it.id}")
+        })
     }
 
     @Composable
     fun HelloContent(list: List<Row>, onRowClicked: (Row) -> Unit) {
-        LazyColumn() {
+        LazyColumn {
             for (row in list) {
                 item { ARow(row, onRowClicked) }
             }
@@ -57,7 +77,6 @@ class MainAcitvity : AppCompatActivity() {
     fun ARow(row: Row, onRowClicked: (Row) -> Unit) {
         Card(
             Modifier
-
                 .shadow(10.dp)
                 .fillMaxWidth()
                 .padding(5.dp)
@@ -68,7 +87,10 @@ class MainAcitvity : AppCompatActivity() {
                     painter = painterResource(id = R.drawable.ic_jetchat), contentDescription = "",
                     modifier = Modifier
                         .clickable { onRowClicked(row) }
-                        .indication(indication = rememberRipple(), interactionSource = MutableInteractionSource())
+                        .indication(
+                            indication = rememberRipple(),
+                            interactionSource = MutableInteractionSource()
+                        )
                 )
             }
         }
@@ -77,6 +99,11 @@ class MainAcitvity : AppCompatActivity() {
     @Preview(widthDp = 400, heightDp = 600)
     @Composable
     fun HelloContentPreview() {
-        HelloContent(list = listOf(Row("abra"), Row("cadabra"), Row("bum")), {})
+        HelloContent(
+            list = listOf(
+                Row(1, "abra", "abra"),
+                Row(2, "cadabra", "cadabra"),
+                Row(3, "bum", "bum")
+            ), {})
     }
 }

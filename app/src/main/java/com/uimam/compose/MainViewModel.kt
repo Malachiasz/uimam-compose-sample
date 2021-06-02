@@ -22,7 +22,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-data class Row(val name: String)
+data class Row(
+    val id: Int,
+    val name: String,
+    val description: String
+)
 
 /**
  * Used to communicate between screens.
@@ -34,7 +38,14 @@ class MainViewModel : ViewModel() {
 
     fun init() {
         viewModelScope.launch {
-            _list.value = MutableList(100, { index -> Row(index.toString()) })
+            _list.value =
+                MutableList(100, { index ->
+                    Row(
+                        index,
+                        index.toString(),
+                        "${index} is a number"
+                    )
+                })
         }
     }
 
